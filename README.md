@@ -23,6 +23,7 @@ Spotify Missing Songs is a Go program that helps you keep track of changes in yo
    ```
    git clone https://github.com/yourusername/spotify-missing-songs.git
    cd spotify-missing-songs
+   mkdir playlists
    ```
 
 2. Install dependencies:
