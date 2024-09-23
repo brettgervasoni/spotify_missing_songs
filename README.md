@@ -49,8 +49,8 @@ Spotify Missing Songs is a Go program that helps you keep track of changes in yo
    
    First, add your credentials to the keychain:
    ```bash
-   security add-generic-password -a "your_email@example.com" -s "Spotify API" "Client ID"
-   security add-generic-password -a "your_email@example.com" -s "Spotify API" "Client Secret"
+   security add-generic-password -a "your_email@example.com" -s "Spotify API"
+   security add-generic-password -a "your_email@example.com" -s "Spotify API Secret"
    ```
 
    Then, retrieve and set the values in your shell:
