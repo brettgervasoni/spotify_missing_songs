@@ -66,6 +66,8 @@ Spotify Missing Songs is a Go program that helps you keep track of changes in yo
 go run *.go --help
 ```
 
+Use Cron to run it periodically.
+
 ## Usage
 
 Run the program with one of the following flags:
