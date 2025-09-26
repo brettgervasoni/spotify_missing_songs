@@ -30,6 +30,7 @@ var (
 	allPlaylists   = flag.Bool("a", false, "Scan all playlists, including your Liked Songs (Saved Tracks)")
 	favouritesOnly = flag.Bool("f", false, "Favourite playlists only (including Liked Songs), as defined by single comma seperated playlist IDs in a json file")
 	printPlaylists = flag.Bool("p", false, "Print all playlists")
+	playlistSongs  = flag.String("s", "", "Print all songs for a given playlist ID")
 	help           = flag.Bool("h", false, "Show this help menu")
 )
 
@@ -84,7 +85,15 @@ func main() {
 			log.Fatal("Failed to get all playlists:", err)
 		}
 		for _, playlist := range playlists {
-			fmt.Printf("ID: %s, Name: %s\n", playlist.ID, playlist.Name)
+			fmt.Printf("ID: %s Name: %s\n", playlist.ID, playlist.Name)
+		}
+		return
+	}
+
+	if *playlistSongs != "" {
+		err := printPlaylistSongs(client, spotify.ID(*playlistSongs))
+		if err != nil {
+			log.Fatal("Failed to get playlist songs:", err)
 		}
 		return
 	}
@@ -427,4 +436,54 @@ func getAllPlaylists(client spotify.Client) ([]spotify.SimplePlaylist, error) {
 	}
 
 	return playlists, nil
+}
+
+// Function to print all songs for a given playlist ID
+// Rather than returning all songs, this function merely prints them. This was easier due to the pagination.
+func printPlaylistSongs(client spotify.Client, playlistID spotify.ID) error {
+	// Get playlist info first
+	playlist, err := client.GetPlaylist(playlistID)
+	if err != nil {
+		return fmt.Errorf("failed to get playlist info: %w", err)
+	}
+
+	fmt.Printf("Playlist: %s (ID: %s)\n", playlist.Name, playlist.ID)
+	fmt.Printf("Total tracks: %d\n\n", playlist.Tracks.Total)
+
+	offset := 0
+	limit := 100 // grabbing 100 tracks at a time
+	trackCount := 0
+
+	// loop through all the tracks in the playlist using pagination
+	for {
+		tracksPage, err := client.GetPlaylistTracksOpt(playlistID, &spotify.Options{
+			Limit:  &limit,
+			Offset: &offset,
+		}, "items(track(id,name,artists)),total")
+
+		if err != nil {
+			return fmt.Errorf("failed to get playlist tracks: %w", err)
+		}
+
+		for _, track := range tracksPage.Tracks {
+			if track.Track.ID != "" {
+				trackCount++
+				fmt.Printf("%d. %s by %s (ID: %s)\n",
+					trackCount,
+					track.Track.Name,
+					getArtistsNames(track.Track.Artists),
+					track.Track.ID)
+			}
+		}
+
+		offset += len(tracksPage.Tracks)
+
+		// Break the loop if we've processed all tracks
+		if offset >= tracksPage.Total {
+			break
+		}
+	}
+
+	fmt.Printf("\nTotal songs printed: %d\n", trackCount)
+	return nil
 }
